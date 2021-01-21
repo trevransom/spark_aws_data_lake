@@ -2,7 +2,7 @@ import configparser
 from datetime import datetime
 import os
 from pyspark.sql import SparkSession
-from pyspark.sql.types import TimestampType
+from pyspark.sql.types import *
 from pyspark.sql.functions import udf, col
 from pyspark.sql.functions import year, month, dayofmonth, hour, weekofyear, date_format
 import glob
@@ -42,8 +42,22 @@ def process_song_data(spark, input_data, output_data):
     # get filepath to song data file
     song_data_path = f'{input_data}/song_data/*/*/*/*.json'
 
+    # explicitly define the song_df schema
+    song_df_schema = StructType({
+        StructField('artist_id', StringType(), True),
+        StructField('artist_latitude', DoubleType(), True),
+        StructField('artist_location', DoubleType(), True),
+        StructField('artist_longitude', StringType(), True),
+        StructField('artist_name', StringType(), True),
+        StructField('duration', DoubleType(), True),
+        StructField('num_songs', IntegerType(), True),
+        StructField('song_id', StringType(), True),
+        StructField('title', StringType(), True),
+        StructField('year', IntegerType(), True)
+    })
+
     # read song data file
-    songs_data = spark.read.json(song_data_path)
+    songs_data = spark.read.json(song_data_path, schema=song_df_schema)
     songs_data.persist()
 
     # extract columns to create songs table
@@ -69,8 +83,33 @@ def process_log_data(spark, input_data, output_data):
     # get filepath to log data file
     log_data_path = f'{input_data}/log_data/*/*/*.json'
 
+    # explicitly define the song_df schema
+    log_df_schema = StructType({
+        StructField('artist', StringType(), True),
+        StructField('auth', StringType(), True),
+        StructField('firstName', StringType(), True),
+        StructField('gender', StringType(), True),
+        StructField('itemInSession', IntegerType(), True),
+        StructField('lastName', StringType(), True),
+        StructField('length', DoubleType(), True),
+        StructField('level', StringType(), True),
+        StructField('location', StringType(), True),
+        StructField('method', StringType(), True),
+        StructField('page', StringType(), True),
+        StructField('registration', DoubleType(), True),
+        StructField('sessionId', IntegerType(), True),
+        StructField('song', StringType(), True),
+        StructField('status', IntegerType(), True),
+        StructField('ts', LongType(), True),
+        StructField('userAgent', StringType(), True),
+        StructField('userId', StringType(), True)
+    })
+
     # read log data file
-    log_df = spark.read.json(log_data_path)
+    log_df = spark.read.json(log_data_path, schema=log_df_schema)
+
+    log_df = log_df.filter(log_df.userId != '')
+    log_df = log_df.withColumn("userId", log_df["userId"].cast(IntegerType()))
 
     # filter by actions for song plays
     log_df = log_df.filter(log_df.page == "NextSong")
@@ -97,8 +136,22 @@ def process_log_data(spark, input_data, output_data):
     # read in song data to use for songplays table
     song_data_path = f'{input_data}/song_data/*/*/*/*.json'
 
+    # explicitly define the song_df schema
+    song_df_schema = StructType({
+        StructField('artist_id', StringType(), True),
+        StructField('artist_latitude', DoubleType(), True),
+        StructField('artist_location', DoubleType(), True),
+        StructField('artist_longitude', StringType(), True),
+        StructField('artist_name', StringType(), True),
+        StructField('duration', DoubleType(), True),
+        StructField('num_songs', IntegerType(), True),
+        StructField('song_id', StringType(), True),
+        StructField('title', StringType(), True),
+        StructField('year', IntegerType(), True)
+    })
+
     # read song data file
-    song_df = spark.read.json(song_data_path)
+    song_df = spark.read.json(song_data_path, schema=song_df_schema)
 
     # extract columns from joined song and log datasets to create songplays table
     songplays_table = log_df.join(song_df, (log_df.artist == song_df.artist_name) & (log_df.song == song_df.title) & (log_df.length == song_df.duration))

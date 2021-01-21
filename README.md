@@ -1,8 +1,10 @@
 # Spark + AWS Data Lake and ETL
 
-## What is Sparkify?
+## Project Summary
 
 Sparkify, a music streaming startup, wanted to collect logs they have on user activity and song data and centralize them in a database in order to run analytics. This AWS S3 data lake, set up with a star schema, will help them to easily access their data in an intuitive fashion and start getting rich insights into their user base.
+
+I set up an EMR instance with a Spark cluster to process their logs, reading them in from an S3 bucket. I then ran transformations on that big data, distributing it out into separate tables and then writing it back into an S3 data lake.
 
 ## Why this Database and ETL design?
 
